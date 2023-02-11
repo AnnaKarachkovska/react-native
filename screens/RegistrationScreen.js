@@ -15,11 +15,16 @@ import {
 import * as Font from "expo-font";
 import { useEffect, useState } from "react";
 
+const initFocus = { email: false, password: false, login: false };
+
 export default function RegistrationScreen() {
   const [isReady, setIsReady] = useState(false);
+  const [focus, setFocus] = useState(false);
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [hasFocus, setHasFocus] = useState(initFocus);
 
   const loginHandler = (text) => setLogin(text);
   const emailHandler = (text) => setEmail(text);
@@ -41,7 +46,7 @@ export default function RegistrationScreen() {
       } catch (e) {
         console.log(e);
       } finally {
-        setIsReady(true);
+          setIsReady(true);
       }
     }
     prepare();
@@ -51,13 +56,27 @@ export default function RegistrationScreen() {
     return null;
   }
 
+  const onInputFocus = (text) => {
+    setFocus(true);
+    setHasFocus(arr => ({ ...arr, [text]: true }));
+  };
+
+  const onInputBlur = (text) => {
+    setHasFocus(arr => ({ ...arr, [text]: false }));
+  };
+
+  const removeFocus = () => {
+    setFocus(false);
+    Keyboard.dismiss();
+  };
+
   return (
     <>
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <TouchableWithoutFeedback onPress={removeFocus}>
           <View style={styles.container}>
             <ImageBackground
               source={require("../assets/img/bg.jpg")}
@@ -73,38 +92,48 @@ export default function RegistrationScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-              <View style={styles.form}>
+              <View style={[styles.form, { paddingBottom: focus ? 0 : 78 }]}>
                 <Text style={styles.title}>Registration</Text>
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, { marginBottom: focus ? 32 : 43 }]}>
                   <TextInput
                     value={login}
                     onChangeText={loginHandler}
                     placeholder="Login"
-                    style={styles.input}
+                    style={[styles.input, hasFocus.login && styles.inputFocus]}
+                    onFocus={() => onInputFocus('login')}
+                    onBlur={() => onInputBlur('login')}
                   />
                   <TextInput
                     value={email}
                     onChangeText={emailHandler}
                     placeholder="E-mail"
-                    style={styles.input}
+                    style={[styles.input, hasFocus.email && styles.inputFocus]}
+                    onFocus={() => onInputFocus('email')}
+                    onBlur={() => onInputBlur('email')}
                   />
                   <TextInput
                     value={password}
                     onChangeText={passwordHandler}
                     placeholder="Password"
                     secureTextEntry={true}
-                    style={styles.input}
+                    style={[styles.input, hasFocus.password && styles.inputFocus]}
+                    onFocus={() => onInputFocus('password')}
+                    onBlur={() => onInputBlur('password')}
                   />
                   <TouchableOpacity style={styles.showBtn}>
                     <Text style={styles.link}>Show</Text>
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.btn} onPress={register}>
-                  <Text style={styles.btnText}>Sign up</Text>
-                </TouchableOpacity>
-                <Text style={styles.link}>
-                  Already have an account? Sign in
-                </Text>
+                {!focus && 
+                (<View>
+                  <TouchableOpacity style={styles.btn} onPress={register}>
+                    <Text style={styles.btnText}>Sign up</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.link}>
+                    Already have an account? Sign in
+                  </Text>
+                </View>)
+                }
               </View>
             </ImageBackground>
           </View>
@@ -166,7 +195,6 @@ const styles = StyleSheet.create({
   form: {
     paddingTop: 92,
     paddingHorizontal: 16,
-    paddingBottom: 78,
 
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 25,
@@ -177,8 +205,6 @@ const styles = StyleSheet.create({
 
     flexBasis: inputHeight * 3 + gap * 2,
     justifyContent: "space-between",
-
-    marginBottom: 43,
   },
   input: {
     padding: 16,
@@ -193,6 +219,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 19,
     color: "#212121",
+  },
+  inputFocus: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#FF6C00",
   },
   showBtn: {
     position: "absolute",

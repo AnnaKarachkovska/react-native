@@ -14,11 +14,15 @@ import {
 import * as Font from "expo-font";
 import { useEffect, useState } from "react";
 
+const initFocus = { email: false, password: false};
+
 export default function LoginScreen() {
   const [isReady, setIsReady] = useState(false);
-
+  const [focus, setFocus] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [hasFocus, setHasFocus] = useState(initFocus);
 
   const emailHandler = (text) => setEmail(text);
   const passwordHandler = (text) => setPassword(text);
@@ -49,43 +53,67 @@ export default function LoginScreen() {
     return null;
   }
 
+  const onInputFocus = (text) => {
+    setFocus(true);
+    setHasFocus(arr => ({ ...arr, [text]: true }));
+  };
+
+  const onInputBlur = (text) => {
+    setHasFocus(arr => ({ ...arr, [text]: false }));
+  };
+
+  const removeFocus = () => {
+    setFocus(false);
+    Keyboard.dismiss();
+  };
+
   return (
     <>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <TouchableWithoutFeedback onPress={removeFocus}>
           <View style={styles.container}>
             <ImageBackground
               source={require("../assets/img/bg.jpg")}
               style={styles.bg}
             >
-              <View style={styles.form}>
+              <View style={[styles.form, {paddingBottom: focus ? 0 : 145}]}>
                 <Text style={styles.title}>Login</Text>
 
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, { marginBottom: focus ? 32 : 43 }]}>
                   <TextInput
                     value={email}
                     onChangeText={emailHandler}
                     placeholder="E-mail"
-                    style={styles.input}
+                    style={[styles.input, hasFocus.email && styles.inputFocus]}
+                    onFocus={() => onInputFocus('email')}
+                    onBlur={() => onInputBlur('email')}
                   />
                   <TextInput
                     value={password}
                     onChangeText={passwordHandler}
                     placeholder="Password"
                     secureTextEntry={true}
-                    style={styles.input}
+                    style={[styles.input, hasFocus.password && styles.inputFocus]}
+                    onFocus={() => onInputFocus('password')}
+                    onBlur={() => onInputBlur('password')}
                   />
                   <TouchableOpacity style={styles.showBtn}>
                     <Text style={styles.link}>Show</Text>
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.btn} onPress={login}>
-                  <Text style={styles.btnText}>Sign in</Text>
-                </TouchableOpacity>
-                <Text style={styles.link}>Do not have an account? Sign up</Text>
+                {!focus &&
+                  (<View>
+                  <TouchableOpacity style={styles.btn} onPress={login}>
+                    <Text style={styles.btnText}>Sign in</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.link}>
+                    Do not have an account? Sign up
+                  </Text>
+                </View> )
+                }
               </View>
             </ImageBackground>
           </View>
@@ -119,7 +147,6 @@ const styles = StyleSheet.create({
   form: {
     paddingTop: 32,
     paddingHorizontal: 16,
-    paddingBottom: 78,
 
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 25,
@@ -130,8 +157,6 @@ const styles = StyleSheet.create({
 
     flexBasis: inputHeight * 2 + gap,
     justifyContent: "space-between",
-
-    marginBottom: 43,
   },
   input: {
     padding: 16,
@@ -146,6 +171,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 19,
     color: "#212121",
+  },
+  inputFocus: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#FF6C00",
   },
   showBtn: {
     position: "absolute",
