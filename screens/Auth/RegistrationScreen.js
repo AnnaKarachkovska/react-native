@@ -1,5 +1,6 @@
 import {
   ImageBackground,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -14,36 +15,39 @@ import {
 import * as Font from "expo-font";
 import { useEffect, useState } from "react";
 
-const initFocus = { email: false, password: false};
+const initFocus = { email: false, password: false, login: false };
 
-export default function LoginScreen() {
+export default function RegistrationScreen({ navigation }) {
   const [isReady, setIsReady] = useState(false);
   const [focus, setFocus] = useState(false);
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [hasFocus, setHasFocus] = useState(initFocus);
 
+  const loginHandler = (text) => setLogin(text);
   const emailHandler = (text) => setEmail(text);
   const passwordHandler = (text) => setPassword(text);
 
-  const login = () => {
+  const register = () => {
     Keyboard.dismiss();
-    console.log(`email: ${email}, password: ${password}`);
+    console.log(`login: ${login}, email: ${email}, password: ${password}`);
+    navigation.navigate('Home');
   };
 
   useEffect(() => {
     async function prepare() {
       try {
         await Font.loadAsync({
-          "Roboto-Medium": require("../assets/fonts/Roboto-Medium.ttf"),
-          "Roboto-Bold": require("../assets/fonts/Roboto-Bold.ttf"),
-          "Roboto-Regular": require("../assets/fonts/Roboto-Regular.ttf"),
+          "Roboto-Medium": require("../../assets/fonts/Roboto-Medium.ttf"),
+          "Roboto-Bold": require("../../assets/fonts/Roboto-Bold.ttf"),
+          "Roboto-Regular": require("../../assets/fonts/Roboto-Regular.ttf"),
         });
       } catch (e) {
         console.log(e);
       } finally {
-        setIsReady(true);
+          setIsReady(true);
       }
     }
     prepare();
@@ -70,19 +74,36 @@ export default function LoginScreen() {
   return (
     <>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS == "ios" ? "padding" : "height"}
         style={styles.container}
       >
         <TouchableWithoutFeedback onPress={removeFocus}>
           <View style={styles.container}>
             <ImageBackground
-              source={require("../assets/img/bg.jpg")}
+              source={require('../../assets/img/bg.jpg')}
               style={styles.bg}
             >
-              <View style={[styles.form, {paddingBottom: focus ? 0 : 145}]}>
-                <Text style={styles.title}>Login</Text>
-
+              <View style={styles.photoContainer}>
+                <View style={styles.photo}>
+                  <TouchableOpacity style={styles.photoBtn}>
+                    <Image
+                      source={require("../../assets/img/plus.png")}
+                      style={styles.photoBtnImg}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={[styles.form, { paddingBottom: focus ? 0 : 78 }]}>
+                <Text style={styles.title}>Registration</Text>
                 <View style={[styles.inputContainer, { marginBottom: focus ? 32 : 43 }]}>
+                  <TextInput
+                    value={login}
+                    onChangeText={loginHandler}
+                    placeholder="Login"
+                    style={[styles.input, hasFocus.login && styles.inputFocus]}
+                    onFocus={() => onInputFocus('login')}
+                    onBlur={() => onInputBlur('login')}
+                  />
                   <TextInput
                     value={email}
                     onChangeText={emailHandler}
@@ -104,15 +125,17 @@ export default function LoginScreen() {
                     <Text style={styles.link}>Show</Text>
                   </TouchableOpacity>
                 </View>
-                {!focus &&
-                  (<View>
-                  <TouchableOpacity style={styles.btn} onPress={login}>
-                    <Text style={styles.btnText}>Sign in</Text>
+                {!focus && 
+                (<View>
+                  <TouchableOpacity style={styles.submitBtn} onPress={register}>
+                    <Text style={styles.btnText}>Sign up</Text>
                   </TouchableOpacity>
-                  <Text style={styles.link}>
-                    Do not have an account? Sign up
-                  </Text>
-                </View> )
+                  <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                    <Text style={styles.link}>
+                      Already have an account? Sign in
+                    </Text>
+                  </TouchableOpacity>
+                </View>)
                 }
               </View>
             </ImageBackground>
@@ -135,6 +158,34 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     justifyContent: "flex-end",
   },
+  photoContainer: {
+    position: "relative",
+    alignItems: "center",
+    marginBottom: -60,
+    zIndex: 2,
+  },
+  photo: {
+    width: 120,
+    height: 120,
+    backgroundColor: "#F6F6F6",
+    borderRadius: 16,
+  },
+  photoBtn: {
+    position: "absolute",
+    right: -12,
+    bottom: 14,
+
+    width: 25,
+    height: 25,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#FF6C00",
+    borderRadius: 100,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoBtnImg: {},
   title: {
     fontFamily: "Roboto-Medium",
     fontSize: 30,
@@ -145,7 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: 33,
   },
   form: {
-    paddingTop: 32,
+    paddingTop: 92,
     paddingHorizontal: 16,
 
     backgroundColor: "#FFFFFF",
@@ -155,7 +206,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     position: "relative",
 
-    flexBasis: inputHeight * 2 + gap,
+    flexBasis: inputHeight * 3 + gap * 2,
     justifyContent: "space-between",
   },
   input: {
@@ -181,7 +232,7 @@ const styles = StyleSheet.create({
     bottom: 15,
     right: 16,
   },
-  btn: {
+  submitBtn: {
     height: 50,
     backgroundColor: "#FF6C00",
     justifyContent: "center",
